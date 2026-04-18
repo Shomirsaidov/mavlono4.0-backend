@@ -48,9 +48,13 @@ app.get('/api/health', (req, res) => {
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
-    app.get('(.*)', (req, res) => {
+    
+    // Catch-all route for SPA fallback
+    app.use((req, res) => {
         if (!req.path.startsWith('/api/')) {
             res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+        } else {
+            res.status(404).json({ error: 'API route not found' });
         }
     });
 }
