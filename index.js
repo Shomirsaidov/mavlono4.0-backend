@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
+const path = require('path');
 const { v2: cloudinary } = require('cloudinary');
 
 cloudinary.config({
@@ -44,6 +44,16 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/health', (req, res) => {
     res.json({ status: 'Platform API running seamlessly.' });
 });
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/dist')));
+    app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api/')) {
+            res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+        }
+    });
+}
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
