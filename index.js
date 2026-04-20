@@ -45,19 +45,17 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'Platform API running seamlessly.' });
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
-    
-    // Catch-all route for SPA fallback
-    app.use((req, res) => {
-        if (!req.path.startsWith('/api/')) {
-            res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-        } else {
-            res.status(404).json({ error: 'API route not found' });
-        }
-    });
-}
+// Serve frontend
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all route for SPA fallback
+app.use((req, res) => {
+    if (!req.path.startsWith('/api/')) {
+        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    } else {
+        res.status(404).json({ error: 'API route not found' });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
