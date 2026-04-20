@@ -31,7 +31,7 @@ app.use('/api/ai', require('./routes/ai'));
 
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
-    const adminPass = process.env.ADMIN_PASSWORD || 'mavlono2026';
+    const adminPass = process.env.ADMIN_PASSWORD || '141206';
     
     if (password === adminPass) {
         // Return a simple session token (in a real app, use JWT)
