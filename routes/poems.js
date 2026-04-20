@@ -165,26 +165,38 @@ router.get('/:id', async (req, res) => {
     if (error) return res.status(500).json({ error: error.message });
     if (!poem) return res.status(404).json({ error: 'Poem not found' });
     
-    // Register views asynchronously. Ignore error for now.
-    // Replace hardcoded "7777777" with actual user context from auth later
+    // Registered views asynchronously.
     supabase.from('views').insert({
         user_id: null,
         poem_id: poem.id,
         poet_id: poem.poet_id
     }).then();
     
-    // Logic for similar poems by tags
-    const tags = poem.tags ? poem.tags.split(',').map(t => t.trim()) : [];
+    // Logic for similar poems: same author OR overlapping tags
+    const tags = poem.tags ? poem.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     let similars = [];
-    if (tags.length > 0) {
-        const tag = tags[0]; 
-        const { data: sim } = await supabase
-            .from('poems')
-            .select('*, poet:poets(name)')
-            .ilike('tags', `%${tag}%`)
-            .neq('id', poem.id)
-            .limit(10);
-        if (sim) similars = sim;
+    
+    // Build the query
+    let simQuery = supabase
+        .from('poems')
+        .select(`
+            *,
+            poet:poets (id, name, avatar),
+            likes (id, user_id)
+        `)
+        .neq('id', poem.id)
+        .limit(50);
+
+    const conditions = [`poet_id.eq.${poem.poet_id}`];
+    tags.forEach(tag => {
+        conditions.push(`tags.ilike.%${tag}%`);
+    });
+
+    const { data: sim } = await simQuery.or(conditions.join(','));
+    
+    if (sim) {
+        // Sort by relevance (number of matching tags?) or just keep as is (most recent usually)
+        similars = sim;
     }
     
     res.json({ poem, similars });
